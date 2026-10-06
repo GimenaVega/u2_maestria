@@ -1,0 +1,51 @@
+[
+  {
+    "objectID": "graficos para tablas.html",
+    "href": "graficos para tablas.html",
+    "title": "Base de datos",
+    "section": "",
+    "text": "source('https://inkaverse.com/setup.r')\n\nlibrary(googlesheets4)\nlibrary(dplyr)\nlibrary(factoextra)"
+  },
+  {
+    "objectID": "graficos para tablas.html#modelo-estadistico",
+    "href": "graficos para tablas.html#modelo-estadistico",
+    "title": "Base de datos",
+    "section": "Modelo estadistico",
+    "text": "Modelo estadistico\n\\[y=  \\mu + block + genotype + irrigation + genotype*irrigacion + error\\]"
+  },
+  {
+    "objectID": "graficos para tablas.html#comparacion-de-medias",
+    "href": "graficos para tablas.html#comparacion-de-medias",
+    "title": "Base de datos",
+    "section": "Comparacion de medias",
+    "text": "Comparacion de medias\n\nmc_i &lt;- md %&gt;% \n  emmeans(~ irrigation | genotype) %&gt;% \n  cld(Letters = letters, reversed = TRUE) %&gt;% \n  mutate(across(\".group\", trimws)) %&gt;% \n  mutate(across(\".group\", tolower)) %&gt;% \n  rename(sig_i = \".group\")\n\nmc_o &lt;- md %&gt;% \n  emmeans(~ genotype | irrigation) %&gt;% \n  cld(Letters = letters, reversed = TRUE) %&gt;% \n  mutate(across(\".group\", trimws)) %&gt;% \n  mutate(across(\".group\", toupper)) %&gt;% \n  rename(sig_o = \".group\")\n\nmc &lt;- merge(mc_i, mc_o) %&gt;% \n  unite(col = \"sig\", c(\"sig_i\", \"sig_o\"), sep = \"\")"
+  },
+  {
+    "objectID": "graficos para tablas.html#grafico",
+    "href": "graficos para tablas.html#grafico",
+    "title": "Base de datos",
+    "section": "Grafico",
+    "text": "Grafico\n\nmc %&gt;% \nplot_smr(type = \"line\", x= \"genotype\", y = \"emmean\", group = \"irrigation\", sig = \"sig\", sigsize = 2, error = \"SE\")"
+  },
+  {
+    "objectID": "graficos para tablas.html#pca-information",
+    "href": "graficos para tablas.html#pca-information",
+    "title": "Base de datos",
+    "section": "PCA information",
+    "text": "PCA information\n\nc1 &lt;- fviz_eig(mv, \n                addlabels = TRUE,\n                hjust = 0.05,\n                barfill=\"white\",\n                barcolor =\"darkblue\",\n                linecolor =\"red\") + \n  # ylim(0, 30) +\n  labs(\n    title = \"PCA - percentage of explained variances\",\n    y = \"Variance (%)\") +\n  theme_minimal()  +\n  theme(\n    axis.text.x = element_text(size = 12)\n    , axis.text.y = element_text(size = 12)\n  )\n\nc1\n\nc2 &lt;- fviz_contrib(mv,\n                     choice = \"var\", \n                     axes = 1, \n                     top = 30,\n                     fill=\"white\",\n                     color =\"darkblue\"\n                   , sort.val = \"asc\"\n                   ) +\n  # ylim(0, 8) +\n  labs(title = \"Dim 1 - variables contribution\", x = \"\") +\n  coord_flip()  +\n  theme(\n    axis.text.x = element_text(size = 12)\n    , axis.text.y = element_text(size = 12)\n  )\n\nc2\n\nc3 &lt;- fviz_contrib(mv,\n                     choice = \"var\", \n                     axes = 2, \n                     top = 30,\n                     fill=\"white\",\n                     color =\"darkblue\"\n                   , sort.val = \"asc\"\n                   ) +\n  # ylim(0, 8) +\n  labs(title = \"Dim 2 - variables contribution\", x = \"\") +\n  coord_flip()  +\n  theme(\n    axis.text.x = element_text(size = 12)\n    , axis.text.y = element_text(size = 12)\n  )\n\nc3\n\nlpanel &lt;- c(c1, c2, c3) %&gt;% \n  plot_grid(plotlist = ., ncol = 1, labels = \"auto\"\n            , rel_heights = c(1, 1.2, 1.2))\n  \nrpanel &lt;- \\() {\n  \npcainfo$cos2[, 1:2] %&gt;% \n  corrplot :: corrplot(\n    is.corr = F\n    , method = \"number\",\n    type = \"full\",\n    tl.col = \"black\",\n    tl.srt = 45,\n    tl.cex = 0.9, \n    number.cex = 0.5, \n    number.digits = 1,\n    cl.cex = 0.7,\n    cl.pos = \"r\",\n    cl.align = \"r\",\n    cl.ratio = 4 \n  )\n\n}\n\ngrid &lt;- c(lpanel, rpanel) %&gt;% \n  plot_grid(plotlist = ., ncol = 2, labels = c(\"\", \"d\"))\n\nplot &lt;- grid %&gt;% \n  ggsave(plot = ., \"manuscript/contribution.jpg\"\n         , units = \"cm\"\n         , width = 28, height = 36)\n\nplot %&gt;% include_graphics()"
+  },
+  {
+    "objectID": "labels.html",
+    "href": "labels.html",
+    "title": "Experimental Label",
+    "section": "",
+    "text": "1 Setup\n\nsource(\"https://inkaverse.com/setup.r\")\n\n\n\n2 Field-book\n\ngs &lt;- \"url\" %&gt;% \n  as_sheets_id()\n\nfb &lt;- gs %&gt;% \n  range_read(ss = .,sheet = \"fb\")\n\n#&gt; Google fonts: https://fonts.google.com/\n\nfont &lt;- c(\"Merriweather Sans\", \"Permanent Marker\", \"Tillana\")\nhuito_fonts(font)\n\n\n\n3 Labels\n\nlabel &lt;- fb %&gt;%\n  label_layout(size = c(5.2, 10)\n               , border_color = \"forestgreen\"\n               , border_width = 1.5\n               ) %&gt;%\n  include_image(\n    value = \"https://doctoradofisica.uni.edu.pe/wp-content/uploads/2024/01/d123d3.webp\"\n    , size = c(3, 3)\n    , position = c(1.6, 9.5)\n    ) %&gt;% \n  include_image(\n    value = \"https://huito.inkaverse.com/img/scale.pdf\"\n    , size = c(5, 1)\n    , position = c(2.6, 8.5)\n    ) %&gt;% \n  include_barcode(\n    value = \"qrcode\"\n    , size = c(5, 5)\n    , position = c(2.6, 5.5)\n    ) %&gt;% \n  include_text(value = \"plots\"\n               , position = c(4.4, 9.5)\n               , size = 16\n               , color = \"black\"\n               , font = font[3]\n               ) %&gt;% \n  include_text(value = \"factor1\"\n               , position = c(2.6, 2.6)\n               , size = 16\n               , color = \"blue\"\n               , font = font[1]\n               , prefix = \"Factor: \"\n               ) %&gt;% \n  include_text(value = \"factor2\"\n               , position = c(2.6, 1.8)\n               , size = 15\n               , color = \"red\"\n               , font = font[1]\n               , prefix = \"Factor: \"\n               ) %&gt;% \n  include_image(\n    value = \"https://huito.inkaverse.com/img/scale.pdf\"\n    , size = c(5, 1)\n    , position = c(2.6, 0.9)\n    , opts = 'image_convert(type = \"Grayscale\")'\n    ) \n\nlabel %&gt;% label_print(mode = \"preview\")\n\n\n\n4 Labels to print\n\nlabel %&gt;% \n  label_print(mode = \"complete\"\n              , filename = \"files/labels\"\n              # , paper = c(100, 100)\n              , units = \"cm\"\n              )"
+  },
+  {
+    "objectID": "files/phenomics.html",
+    "href": "files/phenomics.html",
+    "title": "Phenomics Project",
+    "section": "",
+    "text": "Tools required for image analysis\n\n1 Resources\n\nGit: Version control system\nAnaconda: Anaconda\nLabel Studio: Label Studio\nLabels design: Huito package\nPhenoboard: Phenotyping board\nScale: Phenotyping board\n\n\n\n2 Repository for Image Analysis Annotation\nThis instructions are designed for the management, organization, and utilization of images for annotation processes in image analysis projects. The following guidelines must be observed:\n\nAll images must be placed in the library folder.\n\nThe script code contains the instructions for moving images in blocks.\n\nIt is necessary to ensure that images are not duplicated and are properly rotated before use.\nThe website associated with this repository will display only the content defined in the _quarto.yml.\n\nThe website must be built using the command:\nquarto render website\n\nThe library folder will be hosted on the website, and each image will be assigned a unique URL.\nImage URLs can be extracted using the code provided in Image URL for Label Studio.\nThe generated links should be employed as references for annotations in Label Studio.\n\n\n\n3 Change or fix image path\n\nlibrary(tidyverse)\nlibrary(magick)\n\nimgdir &lt;- choose.dir() \nnewdir &lt;- choose.dir() \n\nimgfiles &lt;- list.files(path = imgdir\n                       , full.names = T\n                       , recursive = T\n                       )\n\nmovefiles &lt;- imgfiles %&gt;% \n  enframe(name = \"num\", value = \"path\") %&gt;% \n  mutate(imgname = gsub('.*GERM/(.+)', '\\\\1', path)) %&gt;% \n  mutate(across(imgname, ~gsub('/', '_', .))) %&gt;% \n  mutate(across(imgname, ~gsub('[[:space:]]', '-', .))) %&gt;% \n  mutate(across(imgname, ~gsub('\\\\(|\\\\)', '_', .))) %&gt;% \n  mutate(across(imgname, ~gsub('__', '_', .))) %&gt;% \n  mutate(newdir = file.path({{newdir}}, imgname)) %&gt;% \n  filter(str_detect(imgname, \"DIA-(3|4)\")) %&gt;% \n  filter(!str_detect(imgname, \"mp4\"))\n\nnrow(movefiles)\n\nwalk(movefiles, \\(x) {\n  \n  file.copy(from = movefiles$path, to = movefiles$newdir\n            , overwrite = T)\n})\n\n\n\n4 Image URL for Label Studio\n\nnewdir &lt;- \"library/maiz/\"\n\nimgs &lt;- list.files(path = newdir\n                   , pattern = \"jpg\"\n                   , full.names = TRUE\n                   , recursive = TRUE\n                   ) %&gt;% \n  enframe() %&gt;% \n  mutate(url = file.path(\"https://flavjack.github.io/pheno-germination\", value))\n\nimgs %&gt;% \n  select(url) %&gt;% \n  write_csv(file.path(newdir, \"images4labelstudio.txt\"), col_names = F)"
+  }
+]

@@ -1,0 +1,133 @@
+---
+# title: "Manuscript Analysis"
+format:
+  html:
+    toc: true
+    toc-expand: true
+    toc-depth: 4
+    toc-location: left
+    number-sections: true
+    self-contained: true
+    code-fold: false
+editor_options: 
+  chunk_output_type: console
+execute: 
+  warning: false
+  message: false
+  echo: true
+---
+
+# Project Setup
+
+```{r}
+#| label: setup
+
+source('https://inkaverse.com/setup.r')
+```
+
+# Data import
+
+```{r}
+gs <- "https://docs.google.com/spreadsheets/d/1cNoexwoni9u8OxOOeWBAZIlYe6dcXQ4yPVuuHt_pOsU/edit?gid=0#gid=0" %>% 
+  as_sheets_id()
+
+fb <- gs %>% 
+  range_read(ss = ., sheet = "fb") %>% 
+  mutate(
+    variedades = factor(variedades),
+    rep = factor(rep),
+    planta = factor(planta)
+  )
+
+str(fb)
+
+
+```
+
+# Bloxplot
+
+```{r}
+library(tidyverse)
+
+ggplot(fb, aes(x = variedades, y = severidad)) +
+  geom_boxplot() +
+  labs(
+    x = "Variedad",
+    y = "Severidad"
+  ) +
+  theme_classic()
+```
+
+# ANOVA
+
+```{r}
+md <- aov(severidad ~ variedades, fb)
+anova(md)
+
+plot(md)
+
+md <-  emmeans(md, ~ variedades)
+md
+
+plot(md)
+
+letras <- cld(md, Letters = letters, adjust = "tukey") %>%
+  as.data.frame() %>%
+  mutate(.group = str_trim(.group))
+
+letras
+```
+
+# Grafico
+
+```{r}
+ggplot(letras, aes(x = variedades, y = emmean)) +
+  geom_col() +
+  geom_text(
+    aes(y = emmean + 2, label = .group),
+    size = 5
+  ) +
+  labs(
+    x = "Variedad",
+    y = "Severidad"
+  ) +
+  theme_classic()
+```
+
+```{r}
+library(tidyverse)
+library(emmeans)
+library(multcomp)
+
+md <- emmeans(md, ~ variedades)
+
+letras <- cld(md, Letters = letters) %>%
+  mutate(y = emmean + max(emmean) * 0.04)
+
+ggplot(fb, aes(x = variedades, y = severidad, fill = variedades)) +
+  geom_bar(
+    stat = "summary",
+    fun = "mean",
+    width = 0.7
+  ) +
+  geom_text(
+    data = letras,
+    aes(
+      x = variedades,
+      y = y,
+      label = .group
+    ),
+    inherit.aes = FALSE,
+    size = 5
+  ) +
+  labs(
+    x = "Variedades",
+    y = "Severidad",
+    fill = "Variedades"
+  ) +
+  theme_classic() +
+  theme(
+    legend.position = "right"
+  )
+
+```
